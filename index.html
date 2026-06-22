@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Peblo Story Buddy — web demo</title>
+<meta name="description" content="A browser recreation of Peblo Story Buddy's core experience: narrated stories with a comprehension quiz." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBFAF7;
+    --paper-2:#F3F0E8;
+    --ink:#1A1815;
+    --ink-soft:#5C5850;
+    --line:#DDD7C8;
+    --clay:#C4502E;
+    --clay-deep:#9C3B20;
+    --sand:#E8E2D6;
+    --green:#5C7A5C;
+    --green-deep:#3F5940;
+    --gold:#D9A441;
+    --card:#FFFEFB;
+    --wrong:#C0524B;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:28px 22px 60px;
+  }
+  header.top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .brandmark{
+    font-family:'Archivo',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color:var(--ink);
+  }
+  .brandmark .dot{ width:8px;height:8px;border-radius:50%; background:var(--gold); }
+  .tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    padding:4px 9px;
+    border-radius:6px;
+  }
+
+  .notice{
+    background:var(--sand);
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:12px 16px;
+    font-size:12.5px;
+    line-height:1.55;
+    color:var(--ink-soft);
+    margin:18px 0 28px;
+  }
+  .notice strong{ color:var(--ink); }
+  .notice a{ color:var(--clay-deep); text-decoration:none; border-bottom:1px solid var(--line); }
+
+  .stage{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:34px 30px;
+    position:relative;
+    overflow:hidden;
+    min-height:380px;
+  }
+
+  /* ---------- AVATAR ---------- */
+  .avatar-zone{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin-bottom:22px;
+  }
+  .avatar{
+    width:96px;height:96px;
+    border-radius:50%;
+    background:var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    transition:transform 0.25s ease;
+  }
+  .avatar svg{ width:58px; height:58px; }
+  .avatar.speaking{
+    animation: pulseAvatar 0.9s ease-in-out infinite;
+  }
+  @keyframes pulseAvatar{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.06); }
+  }
+  .avatar-ring{
+    position:absolute;
+    inset:-8px;
+    border-radius:50%;
+    border:2px solid var(--gold);
+    opacity:0;
+  }
+  .avatar.speaking .avatar-ring{
+    opacity:0.5;
+    animation: ringPulse 0.9s ease-out infinite;
+  }
+  @keyframes ringPulse{
+    0%{ transform:scale(0.9); opacity:0.6; }
+    100%{ transform:scale(1.35); opacity:0; }
+  }
+  .avatar-name{
+    margin-top:12px;
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+
+  /* ---------- STORY TEXT ---------- */
+  .story-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:24px;
+    text-align:center;
+    color:var(--ink);
+    margin:0 0 16px;
+  }
+  .story-text{
+    font-family:'Fredoka',sans-serif;
+    font-size:17px;
+    line-height:1.7;
+    color:var(--ink);
+    text-align:center;
+    max-width:480px;
+    margin:0 auto 26px;
+  }
+  .story-text .word{
+    transition:background 0.15s ease;
+    border-radius:3px;
+    padding:0 1px;
+  }
+  .story-text .word.active{
+    background:rgba(217,164,65,0.35);
+  }
+
+  .controls-row{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .ctrl-btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    border-radius:30px;
+    padding:12px 26px;
+    cursor:pointer;
+    border:none;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:transform 0.1s ease, background 0.15s ease;
+  }
+  .ctrl-btn:active{ transform:scale(0.96); }
+  .ctrl-btn.primary{ background:var(--clay); color:#fff; }
+  .ctrl-btn.primary:hover{ background:var(--clay-deep); }
+  .ctrl-btn.ghost{ background:var(--paper-2); color:var(--ink); border:1px solid var(--line); }
+  .ctrl-btn.ghost:hover{ background:var(--sand); }
+  .ctrl-btn:disabled{ opacity:0.45; cursor:not-allowed; }
+
+  .progress-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-top:22px;
+  }
+  .progress-dots span{
+    width:7px;height:7px;border-radius:50%;
+    background:var(--line);
+    transition:background 0.2s ease, transform 0.2s ease;
+  }
+  .progress-dots span.done{ background:var(--green); }
+  .progress-dots span.now{ background:var(--clay); transform:scale(1.3); }
+
+  /* ---------- QUIZ VIEW ---------- */
+  .quiz-view{ display:none; }
+  .quiz-view.active{ display:block; animation: fadeUp 0.4s ease; }
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .quiz-q{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:19px;
+    text-align:center;
+    color:var(--ink);
+    margin:0 0 22px;
+  }
+  .quiz-options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-width:380px;
+    margin:0 auto;
+  }
+  .quiz-opt{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    text-align:left;
+    padding:13px 18px;
+    border-radius:11px;
+    border:2px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    cursor:pointer;
+    transition:border-color 0.15s ease, transform 0.1s ease, background 0.15s ease;
+  }
+  .quiz-opt:hover{ border-color:var(--gold); }
+  .quiz-opt.correct{
+    border-color:var(--green);
+    background:rgba(92,122,92,0.12);
+    color:var(--green-deep);
+  }
+  .quiz-opt.wrong{
+    border-color:var(--wrong);
+    background:rgba(192,82,75,0.1);
+    color:var(--wrong);
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-6px); }
+    75%{ transform:translateX(6px); }
+  }
+  .quiz-opt:disabled{ cursor:default; }
+
+  .result-zone{
+    display:none;
+    text-align:center;
+    padding-top:6px;
+  }
+  .result-zone.active{ display:block; animation: fadeUp 0.4s ease; }
+  .result-emoji{ font-size:48px; margin-bottom:10px; }
+  .result-title{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:21px;
+    margin:0 0 8px;
+    color:var(--ink);
+  }
+  .result-sub{
+    font-size:14px;
+    color:var(--ink-soft);
+    margin:0 0 22px;
+  }
+
+  /* confetti */
+  .confetti-piece{
+    position:absolute;
+    top:-10px;
+    width:8px; height:8px;
+    opacity:0.9;
+    pointer-events:none;
+  }
+
+  footer.bottom{
+    margin-top:30px;
+    text-align:center;
+  }
+  footer.bottom a{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    border-bottom:1px solid var(--line);
+  }
+  footer.bottom a:hover{ color:var(--clay-deep); border-color:var(--clay-deep); }
+
+  @media (prefers-reduced-motion:reduce){
+    .avatar.speaking{ animation:none; }
+    .avatar.speaking .avatar-ring{ animation:none; opacity:0.3; }
+    .quiz-opt.wrong{ animation:none; }
+  }
+
+  a:focus-visible, button:focus-visible{
+    outline:2px solid var(--clay);
+    outline-offset:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brandmark"><span class="dot"></span>Peblo Story Buddy</div>
+    <span class="tag">Web demo</span>
+  </header>
+
+  <div class="notice">
+    <strong>This is a browser recreation</strong> of the core experience from the original Peblo Story Buddy Flutter app — narration + interactive quiz. The production app (with full animations, state management via Provider, and the complete story library) is built in Flutter. <a href="https://github.com/himanshuchauhan08072004-star/peblo-story-buddy" target="_blank" rel="noopener">View the original source →</a>
+  </div>
+
+  <div class="stage">
+
+    <!-- STORY VIEW -->
+    <div id="storyView">
+      <div class="avatar-zone">
+        <div class="avatar" id="avatar">
+          <div class="avatar-ring"></div>
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="30" fill="#F4D9A0"/>
+            <circle cx="22" cy="28" r="4" fill="#1A1815"/>
+            <circle cx="42" cy="28" r="4" fill="#1A1815"/>
+            <path id="mouthPath" d="M22 42 Q32 42 42 42" stroke="#1A1815" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M14 18 Q18 6 26 16" stroke="#1A1815" stroke-width="3" stroke-linecap="round" fill="none"/>
+            <path d="M50 18 Q46 6 38 16" stroke="#1A1815" stroke-width="3" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <p class="avatar-name">Pip the Fox</p>
+      </div>
+
+      <h2 class="story-title">Pip and the Lost Star</h2>
+      <p class="story-text" id="storyText"></p>
+
+      <div class="controls-row">
+        <button class="ctrl-btn primary" id="playBtn">▶ Listen to the story</button>
+        <button class="ctrl-btn ghost" id="stopBtn" disabled>■ Stop</button>
+      </div>
+
+      <div class="progress-dots">
+        <span class="now" id="dot1"></span>
+        <span id="dot2"></span>
+        <span id="dot3"></span>
+      </div>
+    </div>
+
+    <!-- QUIZ VIEW -->
+    <div class="quiz-view" id="quizView">
+      <div class="avatar-zone" style="margin-bottom:14px;">
+        <div class="avatar" id="quizAvatar" style="width:72px;height:72px;">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="30" fill="#F4D9A0"/>
+            <circle cx="22" cy="28" r="4" fill="#1A1815"/>
+            <circle cx="42" cy="28" r="4" fill="#1A1815"/>
+            <path d="M22 38 Q32 46 42 38" stroke="#1A1815" stroke-width="3" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+      </div>
+      <p class="quiz-q">What did Pip use to find his way home?</p>
+      <div class="quiz-options" id="quizOptions">
+        <button class="quiz-opt" data-correct="false">A map his mother drew</button>
+        <button class="quiz-opt" data-correct="true">The light of the fallen star</button>
+        <button class="quiz-opt" data-correct="false">His friend the owl's directions</button>
+      </div>
+    </div>
+
+    <!-- RESULT VIEW -->
+    <div class="result-zone" id="resultView">
+      <div class="result-emoji" id="resultEmoji">🌟</div>
+      <h3 class="result-title" id="resultTitle">Great listening!</h3>
+      <p class="result-sub" id="resultSub">You caught exactly what Pip needed.</p>
+      <button class="ctrl-btn primary" id="replayBtn">↻ Play again</button>
+    </div>
+
+  </div>
+
+  <footer class="bottom">
+    <a href="https://github.com/himanshuchauhan08072004-star/peblo-story-buddy" target="_blank" rel="noopener">View source on GitHub</a>
+  </footer>
+</div>
+
+<script>
+(function(){
+  const storyParts = [
+    "Pip the fox loved the woods at night, when the leaves turned silver under the moon.",
+    "One evening, a tiny star fell from the sky and landed deep in the bushes, glowing softly.",
+    "Pip picked it up gently. Its warm light showed him every path home, even in the dark."
+  ];
+  const fullStory = storyParts.join(" ");
+
+  const storyText = document.getElementById('storyText');
+  const playBtn = document.getElementById('playBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const avatar = document.getElementById('avatar');
+  const storyView = document.getElementById('storyView');
+  const quizView = document.getElementById('quizView');
+  const resultView = document.getElementById('resultView');
+  const quizOptions = document.getElementById('quizOptions');
+  const replayBtn = document.getElementById('replayBtn');
+  const dot1 = document.getElementById('dot1');
+  const dot2 = document.getElementById('dot2');
+  const dot3 = document.getElementById('dot3');
+
+  // Render story as spans for word highlighting
+  function renderStory(){
+    const words = fullStory.split(' ');
+    storyText.innerHTML = words.map((w,i) => `<span class="word" data-i="${i}">${w}</span>`).join(' ');
+  }
+  renderStory();
+
+  let synth = window.speechSynthesis;
+  let utterance = null;
+  let supported = !!synth;
+
+  function setDots(stage){
+    [dot1,dot2,dot3].forEach((d,i) => {
+      d.classList.remove('now','done');
+      if(i < stage) d.classList.add('done');
+      if(i === stage) d.classList.add('now');
+    });
+  }
+
+  function speak(){
+    if(!supported){
+      // Fallback: no TTS available, just simulate with timed highlight then go to quiz
+      simulateWithoutTTS();
+      return;
+    }
+    synth.cancel();
+    utterance = new SpeechSynthesisUtterance(fullStory);
+    utterance.rate = 0.95;
+    utterance.pitch = 1.15;
+
+    const words = Array.from(document.querySelectorAll('.word'));
+    let wordIndex = 0;
+
+    utterance.onboundary = function(e){
+      if(e.name === 'word'){
+        words.forEach(w => w.classList.remove('active'));
+        if(words[wordIndex]) words[wordIndex].classList.add('active');
+        wordIndex++;
+        const progress = wordIndex / words.length;
+        setDots(progress < 0.34 ? 0 : progress < 0.7 ? 1 : 2);
+      }
+    };
+
+    utterance.onstart = function(){
+      avatar.classList.add('speaking');
+      playBtn.disabled = true;
+      stopBtn.disabled = false;
+    };
+
+    utterance.onend = function(){
+      finishNarration();
+    };
+
+    utterance.onerror = function(){
+      finishNarration();
+    };
+
+    synth.speak(utterance);
+  }
+
+  function simulateWithoutTTS(){
+    avatar.classList.add('speaking');
+    playBtn.disabled = true;
+    stopBtn.disabled = false;
+    const words = Array.from(document.querySelectorAll('.word'));
+    let i = 0;
+    const interval = setInterval(() => {
+      words.forEach(w => w.classList.remove('active'));
+      if(words[i]) words[i].classList.add('active');
+      const progress = i / words.length;
+      setDots(progress < 0.34 ? 0 : progress < 0.7 ? 1 : 2);
+      i++;
+      if(i >= words.length){
+        clearInterval(interval);
+        finishNarration();
+      }
+    }, 220);
+  }
+
+  function finishNarration(){
+    avatar.classList.remove('speaking');
+    playBtn.disabled = false;
+    stopBtn.disabled = true;
+    document.querySelectorAll('.word').forEach(w => w.classList.remove('active'));
+    setDots(3);
+    setTimeout(() => {
+      storyView.style.display = 'none';
+      quizView.classList.add('active');
+    }, 500);
+  }
+
+  playBtn.addEventListener('click', function(){
+    speak();
+  });
+
+  stopBtn.addEventListener('click', function(){
+    if(supported) synth.cancel();
+    avatar.classList.remove('speaking');
+    playBtn.disabled = false;
+    stopBtn.disabled = true;
+    document.querySelectorAll('.word').forEach(w => w.classList.remove('active'));
+  });
+
+  // Quiz logic
+  let answered = false;
+  quizOptions.addEventListener('click', function(e){
+    const btn = e.target.closest('.quiz-opt');
+    if(!btn || answered) return;
+    answered = true;
+    const isCorrect = btn.dataset.correct === 'true';
+    document.querySelectorAll('.quiz-opt').forEach(o => o.disabled = true);
+
+    if(isCorrect){
+      btn.classList.add('correct');
+      setTimeout(() => showResult(true), 550);
+    } else {
+      btn.classList.add('wrong');
+      const correctBtn = Array.from(document.querySelectorAll('.quiz-opt')).find(o => o.dataset.correct === 'true');
+      setTimeout(() => { correctBtn.classList.add('correct'); }, 450);
+      setTimeout(() => showResult(false), 1300);
+    }
+  });
+
+  function showResult(correct){
+    quizView.classList.remove('active');
+    resultView.classList.add('active');
+    const emoji = document.getElementById('resultEmoji');
+    const title = document.getElementById('resultTitle');
+    const sub = document.getElementById('resultSub');
+    if(correct){
+      emoji.textContent = '🌟';
+      title.textContent = 'Great listening!';
+      sub.textContent = 'You caught exactly what Pip needed.';
+      launchConfetti();
+    } else {
+      emoji.textContent = '🦊';
+      title.textContent = 'So close!';
+      sub.textContent = 'It was the light of the fallen star — listen again to catch it next time.';
+    }
+  }
+
+  function launchConfetti(){
+    const stage = document.querySelector('.stage');
+    const colors = ['#C4502E','#D9A441','#5C7A5C','#9C3B20'];
+    for(let i=0;i<24;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random()*100 + '%';
+      piece.style.background = colors[i % colors.length];
+      piece.style.transform = `rotate(${Math.random()*360}deg)`;
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      stage.appendChild(piece);
+      const duration = 1400 + Math.random()*900;
+      const drift = (Math.random()-0.5) * 80;
+      piece.animate([
+        { transform: `translate(0,0) rotate(0deg)`, opacity:1 },
+        { transform: `translate(${drift}px, 420px) rotate(${360+Math.random()*360}deg)`, opacity:0 }
+      ], { duration, easing:'cubic-bezier(.2,.6,.4,1)' });
+      setTimeout(() => piece.remove(), duration + 50);
+    }
+  }
+
+  replayBtn.addEventListener('click', function(){
+    resultView.classList.remove('active');
+    storyView.style.display = 'block';
+    quizView.classList.remove('active');
+    answered = false;
+    setDots(0);
+    document.querySelectorAll('.quiz-opt').forEach(o => {
+      o.disabled = false;
+      o.classList.remove('correct','wrong');
+    });
+    renderStory();
+  });
+})();
+</script>
+
+</body>
+</html>
