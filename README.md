@@ -2,7 +2,7 @@
 
 A browser recreation of the core experience from [Peblo Story Buddy](https://github.com/himanshuchauhan08072004-star/peblo-story-buddy), a Flutter mobile app built for client Peblo.
 
-**Live demo:** [add your Vercel URL here after deploying]
+**Live demo:** https://peblo-web-demo.vercel.app/
 **Original Flutter app source:** https://github.com/himanshuchauhan08072004-star/peblo-story-buddy
 
 ## What this is (and isn't)
