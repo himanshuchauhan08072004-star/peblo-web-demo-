@@ -1,4 +1,4 @@
-# Peblo Story Buddy — Web Demo
+## Peblo Story Buddy — Web Demo
 
 A browser recreation of the core experience from [Peblo Story Buddy](https://github.com/himanshuchauhan08072004-star/peblo-story-buddy), a Flutter mobile app built for client Peblo.
 
@@ -27,4 +27,4 @@ Plain HTML, CSS, and vanilla JavaScript. No frameworks, no build step. Deploys a
 
 ## Author
 
-Himanshu Chauhan — himanshuchauhan08072004@gmail.com
+## Himanshu Chauhan — himanshuchauhan08072004@gmail.com
