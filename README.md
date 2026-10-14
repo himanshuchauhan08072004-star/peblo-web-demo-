@@ -2,14 +2,14 @@
 
 An interactive, kid-friendly storytelling and quiz application built for the Peblo technical challenge — redesigned into a story discovery platform with selectable AI narrators, animated scene reading, a retry-friendly quiz, and a local progress/badges system.
 
-## LIVE :- https://peblo-web-demo.vercel.app/
+# LIVE :- https://peblo-web-demo.vercel.app/
 
 # Technical Choices & Architecture
 Framework Selection
 
 Which framework did you choose and why? I chose Flutter. It allows for rapid UI development, creates smooth ~60fps animations easily, and provides a robust ecosystem for Text-to-Speech (TTS) and state management. Its cross-platform nature also means this single codebase can deploy seamlessly to Web, iOS, and Android.
 
-## Project Structure
+# Project Structure
 
 The app is split into clear responsibility layers instead of one flat file:
 
@@ -55,7 +55,7 @@ Progress & Replayability
 
 Completed stories, selected narrator, speed, theme, and listening/quiz stats persist locally via StorageService (shared_preferences) — no backend needed. ProgressProvider derives five badges (First Story, Story Explorer, Great Listener, Story Detective, Adventure Master) from those same counters, shown on the "My Progress" tab.
 
-## AI Usage & Judgment
+# AI Usage & Judgment
 
 Where did you use AI assistance? I used an AI assistant as a pair-programmer for the full redesign pass: restructuring the single-file prototype into the layered architecture above, writing the voice-mapping logic, and troubleshooting the local Windows/PowerShell environment (Flutter not on PATH, missing platform folders, stale analyzer errors) to get a clean build.
 
